@@ -14,12 +14,12 @@ public class EmpleadoMapper {
         empleado.setEmail(dto.getEmail());
         empleado.setFechaNacimiento(dto.getFechaNacimiento());
         empleado.setFechaIngreso(dto.getFechaIngreso());
-        empleado.setFechaCreacion(dto.getFechaCreacion());
         return empleado;
     }
 
     public static EmpleadoDTO toDTO(Empleado empleado){
         EmpleadoDTO dto = new EmpleadoDTO();
+        dto.setId(empleado.getId());
         dto.setNroDocumento(empleado.getNroDocumento());
         dto.setNombre(empleado.getNombre());
         dto.setApellido(empleado.getApellido());

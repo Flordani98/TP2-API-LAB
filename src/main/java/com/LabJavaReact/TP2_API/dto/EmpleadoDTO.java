@@ -12,8 +12,10 @@ import java.time.LocalDate;
 @Getter @Setter
 public class EmpleadoDTO {
 
+    private Long id;
+
     @NotNull
-    private Integer nroDocumento;
+    private Long nroDocumento;
 
     @NotBlank(message = "Nombre es requerido")
     private String nombre;
@@ -32,7 +34,6 @@ public class EmpleadoDTO {
     @NotNull(message = "Fecha ingreso es requerido")
     private LocalDate fechaIngreso;
 
-    @NotNull
     private LocalDate fechaCreacion;
 
 

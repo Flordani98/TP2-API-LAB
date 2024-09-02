@@ -18,11 +18,11 @@ import java.time.LocalDate;
 public class Empleado {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private Long id;
 
     @NotNull
     @Column(name = "nro_documento", nullable = false, unique = true)
-    private Integer nroDocumento;
+    private Long nroDocumento;
 
     @NotBlank
     @Column(nullable = false)
@@ -49,7 +49,7 @@ public class Empleado {
     private LocalDate fechaCreacion;
 
     public Empleado() {
-        this.fechaIngreso = LocalDate.now();
+        this.fechaCreacion = LocalDate.now();
     }
 
 
