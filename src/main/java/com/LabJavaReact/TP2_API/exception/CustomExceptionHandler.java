@@ -93,5 +93,15 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(responseBody, ex.getStatus());
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Object> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request){
+        Map<String, Object> responseBody = new LinkedHashMap<>();
+        int statusCode = ex.getStatus().value();
+        responseBody.put("Status Code", statusCode + " (Not Found)");
+        responseBody.put("Mensaje", ex.getMessage());
+
+        return new ResponseEntity<>(responseBody, ex.getStatus());
+    }
+
 
 }
