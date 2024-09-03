@@ -5,10 +5,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface EmpleadoRepository extends JpaRepository<Empleado, Integer> {
+public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
 
 
-    Boolean existsById(Long id);
+    boolean existsById(Long id);
     Boolean existsByEmail(String email);
     Boolean existsByNroDocumento(Long nroDocumento);
 

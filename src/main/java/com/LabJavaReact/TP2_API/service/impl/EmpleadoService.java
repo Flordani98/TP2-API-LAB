@@ -3,6 +3,7 @@ package com.LabJavaReact.TP2_API.service.impl;
 import com.LabJavaReact.TP2_API.dto.EmpleadoDTO;
 import com.LabJavaReact.TP2_API.exception.BadCustomerRequestException;
 import com.LabJavaReact.TP2_API.exception.ConflictStateResourceException;
+import com.LabJavaReact.TP2_API.exception.ResourceNotFoundException;
 import com.LabJavaReact.TP2_API.mapper.EmpleadoMapper;
 import com.LabJavaReact.TP2_API.model.Empleado;
 import com.LabJavaReact.TP2_API.repository.EmpleadoRepository;
@@ -16,8 +17,10 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.ConcurrentModificationException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.LabJavaReact.TP2_API.mapper.EmpleadoMapper.toDTO;
 import static com.LabJavaReact.TP2_API.mapper.EmpleadoMapper.toEntity;
 
 @Service
@@ -31,10 +34,15 @@ public class EmpleadoService implements IEmpleadoService {
 
 
     @Override
-    public EmpleadoDTO getEmpleado(int id) {
-        return null;
-    }
+    public EmpleadoDTO getEmpleado(long id) {
+        Optional<Empleado> empleado = repository.findById(id);
+        if(empleado.isPresent()){
+            return toDTO(empleado.get());
+        } else{
+            throw new ResourceNotFoundException("No se encontro el empleado con Id: " + id);
+        }
 
+    }
     @Override
     public List<EmpleadoDTO> getEmpleados() {
         List<Empleado> empleados = repository.findAll();
@@ -45,8 +53,28 @@ public class EmpleadoService implements IEmpleadoService {
     public EmpleadoDTO saveEmpleado(EmpleadoDTO empleadoDTO) {
         validarEmpleado(empleadoDTO);
         Empleado empleado = repository.save(toEntity(empleadoDTO));
-        return EmpleadoMapper.toDTO(empleado);
+        return toDTO(empleado);
     }
+
+    @Override
+    public EmpleadoDTO updateAllEmpleado(long id, EmpleadoDTO dto) {
+        Empleado empleadoExistente = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontró el empleado con Id: " + id));
+
+        validarEmpleado(dto);
+
+        empleadoExistente.setNroDocumento(dto.getNroDocumento());
+        empleadoExistente.setNombre(dto.getNombre());
+        empleadoExistente.setApellido(dto.getApellido());
+        empleadoExistente.setEmail(dto.getEmail());
+        empleadoExistente.setFechaNacimiento(dto.getFechaNacimiento());
+        empleadoExistente.setFechaIngreso(dto.getFechaIngreso());
+
+        Empleado empleadoModificado = repository.save(empleadoExistente);
+
+        return toDTO(empleadoModificado);
+    }
+
 
     private void validarEmpleado(EmpleadoDTO empleadoDTO){
         verificarEmailEmpleado(empleadoDTO.getEmail());
