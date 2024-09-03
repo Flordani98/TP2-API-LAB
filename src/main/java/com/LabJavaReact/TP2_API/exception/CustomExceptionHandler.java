@@ -45,8 +45,8 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
                                                                   WebRequest request){
 
         Map<String, Object> responseBody = new LinkedHashMap<>();
-        responseBody.put("timestamp", new Date()); //newDate(): captura el momento en el q fue instanciado
-        responseBody.put("status", status.value());
+//        responseBody.put("timestamp", new Date()); //newDate(): captura el momento en el q fue instanciado
+        responseBody.put("Status Code", status.value() + "(Bad Request)");
 
         //getBindingResult retorna un objeto bindingResult que contiene detalles sobre los resultados de la validacion
         //incluyendo los errores que se produjeron
@@ -56,7 +56,7 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
                 .map(x -> x.getDefaultMessage())
                 .collect(Collectors.toList());
 
-        responseBody.put("errors", errors);
+        responseBody.put("Mensaje", errors);
 
         return new ResponseEntity<>(responseBody, headers, status);
     }

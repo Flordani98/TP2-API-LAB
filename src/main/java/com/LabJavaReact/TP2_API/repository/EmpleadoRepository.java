@@ -9,5 +9,7 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Integer> {
 
 
     Boolean existsById(Long id);
+    Boolean existsByEmail(String email);
+    Boolean existsByNroDocumento(Long nroDocumento);
 
 }

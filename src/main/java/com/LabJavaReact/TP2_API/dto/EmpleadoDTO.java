@@ -14,24 +14,22 @@ public class EmpleadoDTO {
 
     private Long id;
 
-    @NotNull
+    @NotNull(message = "'nroDocumento' es obligatorio.")
     private Long nroDocumento;
 
-    @NotBlank(message = "Nombre es requerido")
+    @NotBlank(message = "'nombre' es obligatorio.")
     private String nombre;
 
-    @NotBlank(message = "Apellido es requerido")
+    @NotBlank(message = "'apellido' es obligatorio.")
     private String apellido;
 
-    @NotBlank(message = "Email es requerido")
-    @Email
+    @NotBlank(message = "'email' es obligatorio.")
     private String email;
 
-    @NotNull(message = "Fecha de nacimiento es requerido")
-    @Past
+    @NotNull(message = "'fecha de nacimiento' es obligatorio.")
     private LocalDate fechaNacimiento;
 
-    @NotNull(message = "Fecha ingreso es requerido")
+    @NotNull(message = "'fecha ingreso' es obligatorio.")
     private LocalDate fechaIngreso;
 
     private LocalDate fechaCreacion;
