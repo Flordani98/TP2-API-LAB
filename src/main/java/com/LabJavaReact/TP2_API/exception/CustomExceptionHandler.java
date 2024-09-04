@@ -4,16 +4,15 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -23,6 +22,63 @@ import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
+
+    //region explicación por la que se añadieron los métodos: handleExceptionInternal y handleHandlerMethodValidation
+
+    // Cuando se realizan las solicitudes POST de un empleado, si no se le pasa alguno de los atributos requeridos,
+    // la excepción es manejada por el método sobreescrito de ResponseEntityExceptionHandler: handleMethodArgumentNotValid
+
+    //Este método el cual me personaliza la respuesta, no funcionaba al realizar el PUT del empleado.
+    //Cuando se realizaba el PUT y le pasaba un body sin algunos de los atributos requeridos
+    // nunca se ejecutaba mi método handleMethodArgumentNotValid, sino que lo manejaba otra excepción
+    //y me devolvía una respuesta genérica de la excepción.
+    //
+    //Me devolvía la respuesta de la excepción: HandlerMethodValidationException, para poder manejar esta excepción
+    //y devolver una respuesta personalizada la solución que encontre fue implementar estos dos métodos:
+
+    //-> handleExceptionInternal: método para el manejo de excepciones dentro de ResponseEntityExceptionHandler
+    //como la excepción HandlerMethodValidationException es manejada por defecto por ResponseEntityExceptionHandler
+    //para capturarla y redirigirla a un método personalizado dentro de mi clase CustomExceptionHandler,
+    //la sobreescribí en mi clase.
+
+    //-> handleHandlerMethodValidation: se encarga de manejar la excepción HandlerMethodValidationException
+    //que surge cuando se validan los métodos de los controladores (en mi proyecto lo estoy utilizando en el put y post)
+    //con este método se pudo manejar la excepción y me devuelve una respuesta personalizada.
+    //
+    //La razón principal por la que se implementaron fue debido a que handleMethodArgumentNotValid no me capturo,
+    // ni manejo todas las excepciones de validación que se lanzaron, específicamente en el método updateEmpleado
+    // (PUT) que fue donde me di cuenta del error.
+
+    //endregion
+
+    /** Para interceptar y personalizar las excepciones que de otro modo serían manejadas por defecto por Spring.
+     * Específicamente se la está utilizando para manejar la excepción HandlerMethodValidationException.
+     * Al sobrescribir handleExceptionInternal se puede capturar la excepción y redirigirla a un método personalizado
+     * dentro del CustomExceptionHandler
+     */
+    @Override
+    protected ResponseEntity<Object> handleExceptionInternal(Exception ex, @Nullable Object body, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        if (ex instanceof HandlerMethodValidationException) {
+            return handleHandlerMethodValidation((HandlerMethodValidationException) ex, headers, status, request);
+        }
+        return super.handleExceptionInternal(ex, body, headers, status, request);
+    }
+
+    /**
+     * Este es el método que se llama cuando se detecta una excepción HandlerMethodValidationException.
+     * Personaliza la respuesta del error
+     */
+    private ResponseEntity<Object> handleHandlerMethodValidation(HandlerMethodValidationException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        List<String> errors = ex.getAllErrors().stream()
+                .map(error -> error.getDefaultMessage())
+                .collect(Collectors.toList());
+
+        Map<String, Object> responseBody = new LinkedHashMap<>();
+        responseBody.put("Status Code", HttpStatus.BAD_REQUEST.value() + "(Bad Request)");
+        responseBody.put("Mensaje", errors);
+
+        return new ResponseEntity<>(responseBody, headers, status);
+    }
 
     /**
      *Método parte de la clase "ResponseEntityExceptionHandler", es llamado automáticamente por Spring cuando una

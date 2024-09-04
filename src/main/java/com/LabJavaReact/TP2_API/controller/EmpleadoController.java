@@ -12,6 +12,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
+@RequestMapping("/empleado")
 public class EmpleadoController {
 
     EmpleadoService empleadoService;
@@ -20,31 +21,26 @@ public class EmpleadoController {
         this.empleadoService = empleadoService;
     }
 
-    @GetMapping("/empleado/{id}")
+    @GetMapping(value="{id}")
     public ResponseEntity<EmpleadoDTO> getEmpleadoById(@NotNull @PathVariable Long id){
         EmpleadoDTO empleadoDTO = empleadoService.getEmpleado(id);
         return ResponseEntity.ok(empleadoDTO);
     }
-    @GetMapping("/empleado")
+    @GetMapping
     public ResponseEntity<List<EmpleadoDTO>> getEmpleados(){
         List<EmpleadoDTO> empleados = empleadoService.getEmpleados();
         return ResponseEntity.ok(empleados);
     }
 
-//    @GetMapping("empleado/{id}")
-//    public ResponseEntity<EmpleadoDTO> getEmpleado(){
-//
-//    }
-
-    @PostMapping("/empleado")
+    @PostMapping
     public ResponseEntity<EmpleadoDTO> addEmpleado(@Valid @RequestBody EmpleadoDTO empleadoDTO){
         EmpleadoDTO dto = empleadoService.saveEmpleado(empleadoDTO);
         return ResponseEntity.created(URI.create("/empleado/" + dto.getId())).body(dto);
     }
 
-    @PutMapping("/empleado/{id}")
-    public ResponseEntity<EmpleadoDTO> updateEmpleado(@NotNull @PathVariable long idEmpleado, @RequestBody EmpleadoDTO dto){
-        EmpleadoDTO dtoModificado = empleadoService.updateAllEmpleado(idEmpleado, dto);
+    @PutMapping(value="{id}")
+    public ResponseEntity<EmpleadoDTO> updateEmpleado(@NotNull @PathVariable long id, @Valid @RequestBody EmpleadoDTO dto){
+        EmpleadoDTO dtoModificado = empleadoService.updateAllEmpleado(id, dto);
         return ResponseEntity.ok(dtoModificado);
     }
 
