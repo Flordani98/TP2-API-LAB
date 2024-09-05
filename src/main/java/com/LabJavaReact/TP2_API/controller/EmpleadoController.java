@@ -4,7 +4,6 @@ import com.LabJavaReact.TP2_API.dto.EmpleadoDTO;
 import com.LabJavaReact.TP2_API.service.impl.EmpleadoService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,25 +21,25 @@ public class EmpleadoController {
     }
 
     @GetMapping(value="{id}")
-    public ResponseEntity<EmpleadoDTO> getEmpleadoById(@NotNull @PathVariable Long id){
-        EmpleadoDTO empleadoDTO = empleadoService.getEmpleado(id);
+    public ResponseEntity<EmpleadoDTO> obtenerEmpleadoPorId(@NotNull @PathVariable Long id){
+        EmpleadoDTO empleadoDTO = empleadoService.obtenerEmpleado(id);
         return ResponseEntity.ok(empleadoDTO);
     }
     @GetMapping
-    public ResponseEntity<List<EmpleadoDTO>> getEmpleados(){
-        List<EmpleadoDTO> empleados = empleadoService.getEmpleados();
+    public ResponseEntity<List<EmpleadoDTO>> obtenerEmpleados(){
+        List<EmpleadoDTO> empleados = empleadoService.obtenerEmpleados();
         return ResponseEntity.ok(empleados);
     }
 
     @PostMapping
-    public ResponseEntity<EmpleadoDTO> addEmpleado(@Valid @RequestBody EmpleadoDTO empleadoDTO){
-        EmpleadoDTO dto = empleadoService.saveEmpleado(empleadoDTO);
+    public ResponseEntity<EmpleadoDTO> crearEmpleado(@Valid @RequestBody EmpleadoDTO empleadoDTO){
+        EmpleadoDTO dto = empleadoService.guardarEmpleado(empleadoDTO);
         return ResponseEntity.created(URI.create("/empleado/" + dto.getId())).body(dto);
     }
 
     @PutMapping(value="{id}")
-    public ResponseEntity<EmpleadoDTO> updateEmpleado(@NotNull @PathVariable long id, @Valid @RequestBody EmpleadoDTO dto){
-        EmpleadoDTO dtoModificado = empleadoService.updateAllEmpleado(id, dto);
+    public ResponseEntity<EmpleadoDTO> actualizarEmpleado(@NotNull @PathVariable long id, @Valid @RequestBody EmpleadoDTO dto){
+        EmpleadoDTO dtoModificado = empleadoService.actualizarEmpleado(id, dto);
         return ResponseEntity.ok(dtoModificado);
     }
 

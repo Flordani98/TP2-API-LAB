@@ -24,7 +24,7 @@ public class ConceptoController {
     @GetMapping
     public ResponseEntity<List<ConceptoDTO>> obtenerConceptosFiltrados(@RequestParam(required = false) Long id,
                                                                        @RequestParam(required = false) String nombre){
-        List<ConceptoDTO> conceptos = conceptoService.getFilteredConcepts(id, nombre);
+        List<ConceptoDTO> conceptos = conceptoService.obtenerConceptosFiltrados(id, nombre);
         return ResponseEntity.ok(conceptos);
     }
 

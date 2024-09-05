@@ -8,14 +8,12 @@ import com.LabJavaReact.TP2_API.mapper.EmpleadoMapper;
 import com.LabJavaReact.TP2_API.model.Empleado;
 import com.LabJavaReact.TP2_API.repository.EmpleadoRepository;
 import com.LabJavaReact.TP2_API.service.IEmpleadoService;
-import com.LabJavaReact.TP2_API.validation.EmailValidator;
-import com.LabJavaReact.TP2_API.validation.NombreValidator;
-import org.springframework.cglib.core.Local;
+import com.LabJavaReact.TP2_API.validation.ValidadorEmail;
+import com.LabJavaReact.TP2_API.validation.ValidadorNombre;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -34,7 +32,7 @@ public class EmpleadoService implements IEmpleadoService {
 
 
     @Override
-    public EmpleadoDTO getEmpleado(long id) {
+    public EmpleadoDTO obtenerEmpleado(long id) {
         Optional<Empleado> empleado = repository.findById(id);
         if(empleado.isPresent()){
             return toDTO(empleado.get());
@@ -44,20 +42,20 @@ public class EmpleadoService implements IEmpleadoService {
 
     }
     @Override
-    public List<EmpleadoDTO> getEmpleados() {
+    public List<EmpleadoDTO> obtenerEmpleados() {
         List<Empleado> empleados = repository.findAll();
         return empleados.stream().map(EmpleadoMapper::toDTO).collect(Collectors.toList());
     }
 
     @Override
-    public EmpleadoDTO saveEmpleado(EmpleadoDTO empleadoDTO) {
+    public EmpleadoDTO guardarEmpleado(EmpleadoDTO empleadoDTO) {
         validarEmpleado(empleadoDTO);
         Empleado empleado = repository.save(toEntity(empleadoDTO));
         return toDTO(empleado);
     }
 
     @Override
-    public EmpleadoDTO updateAllEmpleado(long id, EmpleadoDTO dto) {
+    public EmpleadoDTO actualizarEmpleado(long id, EmpleadoDTO dto) {
         Empleado empleadoExistente = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontró el empleado con Id: " + id));
 
@@ -81,8 +79,8 @@ public class EmpleadoService implements IEmpleadoService {
         verificarEdadEmpleado(empleadoDTO.getFechaNacimiento());
         verificarFechaIngreso(empleadoDTO.getFechaIngreso());
 
-        NombreValidator.validateNombre(empleadoDTO.getNombre(), "nombre");
-        NombreValidator.validateNombre(empleadoDTO.getApellido(), "apellido");
+        ValidadorNombre.validarNombre(empleadoDTO.getNombre(), "nombre");
+        ValidadorNombre.validarNombre(empleadoDTO.getApellido(), "apellido");
 
         if(repository.existsByNroDocumento(empleadoDTO.getNroDocumento())){
             throw new ConflictStateResourceException("Ya existe un empleado con el documento ingresado");
@@ -100,7 +98,7 @@ public class EmpleadoService implements IEmpleadoService {
         }
     }
     public void verificarEmailEmpleado(String email){
-        EmailValidator.validateEmail(email);
+        ValidadorEmail.validarEmail(email);
 
         if(repository.existsByEmail(email)){
             throw new ConflictStateResourceException("Ya existe un empleado con el email ingresado");
