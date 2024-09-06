@@ -3,6 +3,7 @@ package com.LabJavaReact.TP2_API.service.impl;
 import com.LabJavaReact.TP2_API.dto.JornadaCreateDTO;
 import com.LabJavaReact.TP2_API.dto.JornadaViewDTO;
 import com.LabJavaReact.TP2_API.exception.BadCustomerRequestException;
+import com.LabJavaReact.TP2_API.exception.ResourceNotFoundException;
 import com.LabJavaReact.TP2_API.mapper.JornadaCreateDTOMapper;
 import com.LabJavaReact.TP2_API.mapper.JornadaViewDTOMapper;
 import com.LabJavaReact.TP2_API.model.Concepto;
@@ -46,15 +47,29 @@ public class JornadaService implements IJornadaService {
 
     @Override
     public JornadaViewDTO guardarJornada(JornadaCreateDTO jornadaCreateDTO) {
-        Optional<Empleado> empleado = empleadoRepository.findById(jornadaCreateDTO.getIdEmpleado());
-        Optional<Concepto> concepto = conceptoRepository.findById(jornadaCreateDTO.getIdConcepto());
 
-        if(empleado.isEmpty() && concepto.isEmpty()){
-            throw new BadCustomerRequestException("Empleado y concepto no existen");
-        }
-        Jornada jornada = jornadaRepository.save(JornadaCreateDTOMapper.toEntity(jornadaCreateDTO, empleado.get(), concepto.get()));
+        Empleado empleado = empleadoRepository.findById(jornadaCreateDTO.getIdEmpleado())
+                .orElseThrow(() -> new BadCustomerRequestException("No existe el empleado ingresado"));
+        Concepto concepto = conceptoRepository.findById(jornadaCreateDTO.getIdConcepto())
+                .orElseThrow(() -> new BadCustomerRequestException("No existe el concepto ingresado"));
+
+        validarHsTrabajadasSegunConcepto(concepto.getNombre(), jornadaCreateDTO.getHsTrabajadas());
+
+        Jornada jornada = jornadaRepository.save(JornadaCreateDTOMapper.toEntity(jornadaCreateDTO, empleado, concepto));
 
         return JornadaViewDTOMapper.toDTO(jornada);
     }
+
+    private void validarHsTrabajadasSegunConcepto(String concepto, Integer hsTrabajadas){
+        boolean esConceptoLaborable = !concepto.equals("Día Libre");
+
+        if(hsTrabajadas == null && esConceptoLaborable){
+            throw new BadCustomerRequestException("'hsTrabajadas' es obligatorio para el concepto ingresado");
+        }else if(!esConceptoLaborable && hsTrabajadas != null){
+            throw new BadCustomerRequestException("El concepto ingresado no requiere el ingreso de 'hsTrabajadas'");
+
+        }
+    }
+
 
 }
