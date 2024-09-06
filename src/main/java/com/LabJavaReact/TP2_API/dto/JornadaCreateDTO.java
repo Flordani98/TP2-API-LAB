@@ -10,11 +10,11 @@ import java.time.LocalDate;
 @Setter
 public class JornadaCreateDTO {
 
-    @NotNull
+    @NotNull(message = "'idEmpleado' es obligatorio")
     private Long idEmpleado;
-    @NotNull
+    @NotNull(message = "'idConcepto' es obligatorio")
     private Long idConcepto;
-    @NotNull
+    @NotNull(message = "'fecha' es obligatorio")
     private LocalDate fecha;
     private Integer hsTrabajadas;
 }
