@@ -74,7 +74,9 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
                 .collect(Collectors.toList());
 
         Map<String, Object> responseBody = new LinkedHashMap<>();
-        responseBody.put("Status Code", HttpStatus.BAD_REQUEST.value() + "(Bad Request)");
+        String statusName = HttpStatus.valueOf(status.value()).getReasonPhrase();
+
+        responseBody.put("Status Code", HttpStatus.BAD_REQUEST.value() + " (" + statusName + ")");
         responseBody.put("Mensaje", errors);
 
         return new ResponseEntity<>(responseBody, headers, status);
@@ -101,8 +103,9 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
                                                                   WebRequest request){
 
         Map<String, Object> responseBody = new LinkedHashMap<>();
+        String statusName = HttpStatus.valueOf(status.value()).getReasonPhrase();
 //        responseBody.put("timestamp", new Date()); //newDate(): captura el momento en el q fue instanciado
-        responseBody.put("Status Code", status.value() + "(Bad Request)");
+        responseBody.put("Status Code", status.value() + " (" + statusName + ")");
 
         //getBindingResult retorna un objeto bindingResult que contiene detalles sobre los resultados de la validacion
         //incluyendo los errores que se produjeron
@@ -132,8 +135,9 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleBadCustomerRequestException(BadCustomerRequestException ex, WebRequest request){
         Map<String, Object> responseBody = new LinkedHashMap<>();
         int statusCode = ex.getStatus().value();
-//        responseBody.put("timestamp", new Date());
-        responseBody.put("Status Code", statusCode + " (Bad Request)");
+        String statusName = HttpStatus.valueOf(statusCode).getReasonPhrase();
+
+        responseBody.put("Status Code", statusCode + " (" + statusName + ")");
         responseBody.put("Mensaje", ex.getMessage());
 
         return new ResponseEntity<>(responseBody, ex.getStatus());
@@ -143,7 +147,9 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleConflictStateResourceException(ConflictStateResourceException ex, WebRequest request){
         Map<String, Object> responseBody = new LinkedHashMap<>();
         int statusCode = ex.getStatus().value();
-        responseBody.put("Status Code", statusCode + " (Conflict)");
+        String statusName = HttpStatus.valueOf(statusCode).getReasonPhrase();
+
+        responseBody.put("Status Code", statusCode + " (" + statusName + ")");
         responseBody.put("Mensaje", ex.getMessage());
 
         return new ResponseEntity<>(responseBody, ex.getStatus());
@@ -153,7 +159,9 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request){
         Map<String, Object> responseBody = new LinkedHashMap<>();
         int statusCode = ex.getStatus().value();
-        responseBody.put("Status Code", statusCode + " (Not Found)");
+        String statusName = HttpStatus.valueOf(statusCode).getReasonPhrase();
+
+        responseBody.put("Status Code", statusCode + " (" + statusName + ")");
         responseBody.put("Mensaje", ex.getMessage());
 
         return new ResponseEntity<>(responseBody, ex.getStatus());
