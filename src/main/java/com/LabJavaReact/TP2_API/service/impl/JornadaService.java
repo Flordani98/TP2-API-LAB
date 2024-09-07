@@ -44,15 +44,19 @@ public class JornadaService implements IJornadaService {
 
     @Override
     public List<JornadaViewDTO> obtenerJornadasFiltradas(Long nroDocumento, LocalDate fechaDesde, LocalDate fechaHasta) {
+        verificarFechaDesdeEsMayorFechaHasta(fechaDesde, fechaHasta);
         List<Jornada> jornadas = jornadaRepository.findAll();
         boolean existeNroDoc = existeNroDocumentoListaJornadas(nroDocumento);
 
         if(fechaDesde != null && fechaHasta != null && nroDocumento != null && existeNroDoc){
             jornadas = filtrarListaJornadasSegunNroDocumentoYFecha(jornadas, nroDocumento, fechaDesde, fechaHasta);
+
         }else if(fechaDesde != null && fechaHasta != null){
             jornadas =  filtrarJornadasSegunFechaDesdeHasta(jornadas, fechaDesde, fechaHasta);
+
         }else if(nroDocumento != null){
             jornadas = filtrarListaJornadasSegunNroDocumento(jornadas, nroDocumento);
+
         }else if(fechaDesde != null | fechaHasta != null){
             if(fechaDesde != null){
                 jornadas = filtrarJornadasSegunFechaDesde(jornadas, fechaDesde);
@@ -66,6 +70,15 @@ public class JornadaService implements IJornadaService {
 
         return convertirListaJornadaAJornadaViewDTO(jornadas);
     }
+
+    public void verificarFechaDesdeEsMayorFechaHasta(LocalDate fechaDesde, LocalDate fechaHasta){
+        if(fechaDesde != null && fechaHasta != null){
+            if(fechaDesde.isAfter(fechaHasta)){
+                throw new BadCustomerRequestException("El campo ‘fechaDesde’ no puede ser mayor que ‘fechaHasta’.");
+            }
+        }
+    }
+
     @Override
     public JornadaViewDTO guardarJornada(JornadaCreateDTO jornadaCreateDTO) {
 

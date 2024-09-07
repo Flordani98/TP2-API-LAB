@@ -10,8 +10,11 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -166,6 +169,35 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
         return new ResponseEntity<>(responseBody, ex.getStatus());
     }
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, String>> handleQueryParamConversionError(MethodArgumentTypeMismatchException ex) {
+
+        Map<String, String> errorResponse = new LinkedHashMap<>();
+
+        if(ex.getRequiredType() != null) {
+            if ((ex.getName().equals("fechaDesde") || ex.getName().equals("fechaHasta"))
+                    && ex.getRequiredType().equals(LocalDate.class)) {
+                int statusCode = HttpStatus.BAD_REQUEST.value();
+                String statusName = HttpStatus.valueOf(statusCode).getReasonPhrase();
+
+                errorResponse.put("Status Code", statusCode + " (" + statusName + ")");
+                errorResponse.put("Mensaje", "Los campos ‘fechaDesde’ y ‘fechaHasta’ deben respetar el formato yyyy-mm-dd.");
+
+                return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            }
+
+            if (ex.getName().equals("nroDocumento") && ex.getRequiredType().equals(Long.class)) {
+                int statusCode = HttpStatus.BAD_REQUEST.value();
+                String statusName = HttpStatus.valueOf(statusCode).getReasonPhrase();
+
+                errorResponse.put("Status Code", statusCode + " (" + statusName + ")");
+                errorResponse.put("Mensaje", "El campo ‘nroDocumento’ solo puede contener números enteros.");
+                return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            }
+        }
+        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+
+}
 
 
 }
