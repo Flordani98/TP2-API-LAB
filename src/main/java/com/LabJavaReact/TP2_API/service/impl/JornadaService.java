@@ -12,7 +12,6 @@ import com.LabJavaReact.TP2_API.repository.ConceptoRepository;
 import com.LabJavaReact.TP2_API.repository.EmpleadoRepository;
 import com.LabJavaReact.TP2_API.repository.JornadaRepository;
 import com.LabJavaReact.TP2_API.service.IJornadaService;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -73,6 +72,8 @@ public class JornadaService implements IJornadaService {
         verificarSiFechaSolicitadaEsDiaLibre(empleado, jornadaCreateDTO.getFecha());
         validarCantDiasLibresSemanal(empleado, jornadaCreateDTO.getFecha());
         validarCantDiasLibresMensual(empleado, jornadaCreateDTO.getFecha());
+        validarCantEmpleadoPorDiaYConcepto(jornadaCreateDTO.getFecha(), concepto.getNombre());
+        validarCantJornadaDeEmpleadoSegunConcepto(empleado, jornadaCreateDTO.getFecha(), concepto.getNombre());
 
         Jornada jornada = jornadaRepository.save(JornadaCreateDTOMapper.toEntity(jornadaCreateDTO, empleado, concepto));
 
@@ -206,6 +207,23 @@ public class JornadaService implements IJornadaService {
         }
     }
 
+    private void validarCantEmpleadoPorDiaYConcepto(LocalDate fecha, String nombreConcepto){
+        List<Jornada> listaJornadasSegunFecha = jornadaRepository.findAllByFecha(fecha);
+        int cantEmpleados = contarCantEmpleadosSegunConcepto(listaJornadasSegunFecha, nombreConcepto);
+        if(cantEmpleados > 1){
+            throw new BadCustomerRequestException("Ya existen 2 empleados registrados para este concepto en la fecha ingresada.");
+        }
+
+    }
+    private void validarCantJornadaDeEmpleadoSegunConcepto(Empleado empleado, LocalDate fecha, String nombreConcepto){
+        List<Jornada> listaJornadasEmpleadoSegunFecha = jornadaRepository.findAllByEmpleadoAndFecha(empleado, fecha);
+        int cantJornadas = contarCantTurnoEspecifico(listaJornadasEmpleadoSegunFecha, nombreConcepto);
+        if(cantJornadas > 0){
+            throw new BadCustomerRequestException("El empleado ya tiene registrado una jornada con este concepto en la fecha ingresada.");
+        }
+
+    }
+
     private List<Jornada> filtrarJornadasSegunAnio(List<Jornada> jornadas, int anio){
         return jornadas.stream().filter(jornada -> jornada.getFecha().getYear() == anio).collect(Collectors.toList());
     }
@@ -231,6 +249,21 @@ public class JornadaService implements IJornadaService {
             }
         }
         return cont;
+    }
+    private int contarCantEmpleadosSegunConcepto(List<Jornada> jornadas, String nombreConcepto){
+        int cantEmpleados = 0;
+        List<Empleado> empleadosContados = new ArrayList<>();
+
+        for (Jornada jornada: jornadas) {
+            if(jornada.getConceptoLaboral().getNombre().equals(nombreConcepto)){
+                if(!empleadosContados.contains(jornada.getEmpleado())){
+                    empleadosContados.add(jornada.getEmpleado());
+                    cantEmpleados++;
+                }
+            }
+
+        }
+        return cantEmpleados;
     }
     private int sumarHsTrabajadasListaJornadas(List<Jornada> jornadas){
         int hsTotales = 0;
