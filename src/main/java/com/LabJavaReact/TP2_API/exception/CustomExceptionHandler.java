@@ -107,12 +107,8 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
         Map<String, Object> responseBody = new LinkedHashMap<>();
         String statusName = HttpStatus.valueOf(status.value()).getReasonPhrase();
-//        responseBody.put("timestamp", new Date()); //newDate(): captura el momento en el q fue instanciado
         responseBody.put("Status Code", status.value() + " (" + statusName + ")");
 
-        //getBindingResult retorna un objeto bindingResult que contiene detalles sobre los resultados de la validacion
-        //incluyendo los errores que se produjeron
-        //getFieldErrors: retorna una lista de objetos FieldError, q son los errores de validación
         List<String> errors = ex.getBindingResult().getFieldErrors()
                 .stream()
                 .map(x -> x.getDefaultMessage())

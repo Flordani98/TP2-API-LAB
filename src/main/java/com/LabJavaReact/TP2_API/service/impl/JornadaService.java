@@ -20,7 +20,6 @@ import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -90,27 +89,40 @@ public class JornadaService implements IJornadaService {
 
         validarHsTrabajadasSegunConcepto(concepto.getNombre(), jornadaCreateDTO.getHsTrabajadas());
 
-        //si el concepto es laborable
-        //validaciones para jornadas laborales hsTrabajadas no pueden ser null, ya q se realizan operaciones
-        //TODO: dentro de varios métodos llamo al repo para que me traiga las jornadas, modificar para no hacer tantas llamadas al repo
-        if(jornadaCreateDTO.getHsTrabajadas() != null){
-            validarhsTrabajadasDentroRangoHorario(concepto.getHsMinimo(), concepto.getHsMaximo(), jornadaCreateDTO.getHsTrabajadas());
-            validarHsTrabajadasDiaEspecifico(empleado, jornadaCreateDTO.getFecha(), jornadaCreateDTO.getHsTrabajadas());
-            validarHsTrabajadasSemanal(empleado, jornadaCreateDTO.getHsTrabajadas(), jornadaCreateDTO.getFecha());
-            validarHsTrabajadasMensual(empleado, jornadaCreateDTO.getHsTrabajadas(), jornadaCreateDTO.getFecha());
+        if(esConceptoLaborable(concepto.getNombre())){
+            // Validaciones necesarias para jornadas laborales, asegurando que 'hsTrabajadas' no sea null,
+            // ya que es utilizado en operaciones aritméticas y lógicas.
+            validarConceptoLaborable(empleado, concepto.getHsMinimo(), concepto.getHsMaximo(),
+                                     jornadaCreateDTO.getFecha(), jornadaCreateDTO.getHsTrabajadas());
         }
-        //TODO: refactorizar
-        validarCantTurnosExtraSemanal(empleado, jornadaCreateDTO.getFecha());
-        validarCantTurnosNormalSemanal(empleado, jornadaCreateDTO.getFecha());
-        verificarSiFechaSolicitadaEsDiaLibre(empleado, jornadaCreateDTO.getFecha());
-        validarCantDiasLibresSemanal(empleado, jornadaCreateDTO.getFecha());
-        validarCantDiasLibresMensual(empleado, jornadaCreateDTO.getFecha());
-        validarCantEmpleadoPorDiaYConcepto(jornadaCreateDTO.getFecha(), concepto.getNombre());
-        validarCantJornadaDeEmpleadoSegunConcepto(empleado, jornadaCreateDTO.getFecha(), concepto.getNombre());
+        validarReglasJornada(empleado, jornadaCreateDTO.getFecha(),concepto.getNombre() );
 
         Jornada jornada = jornadaRepository.save(JornadaCreateDTOMapper.toEntity(jornadaCreateDTO, empleado, concepto));
 
         return JornadaViewDTOMapper.toDTO(jornada);
+    }
+
+    public void validarReglasJornada(Empleado empleado, LocalDate fecha, String nombreConcepto){
+        validarCantTurnosExtraSemanal(empleado, fecha, nombreConcepto);
+        validarCantTurnosNormalSemanal(empleado, fecha, nombreConcepto);
+        verificarSiFechaSolicitadaEsDiaLibre(empleado, fecha);
+        validarCantDiasLibresSemanal(empleado, fecha);
+        validarCantDiasLibresMensual(empleado, fecha);
+        validarCantEmpleadoPorDiaYConcepto(fecha, nombreConcepto);
+        validarCantJornadaDeEmpleadoSegunConcepto(empleado, fecha, nombreConcepto);
+    }
+
+    public void validarConceptoLaborable(Empleado empleado, Integer hsMinimo, Integer hsMaximo, LocalDate fecha,
+                                         Integer hsTrabajadasSolicitadas){
+
+        validarhsTrabajadasDentroRangoHorario(hsMinimo, hsMaximo, hsTrabajadasSolicitadas);
+        validarHsTrabajadasDiaEspecifico(empleado, fecha, hsTrabajadasSolicitadas);
+        validarHsTrabajadasSemanal(empleado, hsTrabajadasSolicitadas, fecha);
+        validarHsTrabajadasMensual(empleado, hsTrabajadasSolicitadas, fecha);
+    }
+
+    public boolean esConceptoLaborable(String nombreConcepto){
+        return !nombreConcepto.equals("Día Libre");
     }
 
     public void verificarSiFechaSolicitadaEsDiaLibre(Empleado empleado, LocalDate fechaSolicitada){
@@ -164,7 +176,7 @@ public class JornadaService implements IJornadaService {
 
     }
     private void validarHsTrabajadasSegunConcepto(String concepto, Integer hsTrabajadas){
-        boolean esConceptoLaborable = !concepto.equals("Día Libre");
+        boolean esConceptoLaborable = esConceptoLaborable(concepto);
 
         if(hsTrabajadas == null && esConceptoLaborable){
             throw new BadCustomerRequestException("'hsTrabajadas' es obligatorio para el concepto ingresado");
@@ -185,7 +197,10 @@ public class JornadaService implements IJornadaService {
 
     }
 
-    private void validarCantTurnosExtraSemanal(Empleado empleado, LocalDate fecha){
+    private void validarCantTurnosExtraSemanal(Empleado empleado, LocalDate fecha, String concepto){
+        if (!concepto.equals("Turno Extra")) {
+            return;
+        }
         List<Jornada> jornadasEmpleado = jornadaRepository.findAllByEmpleado(empleado);
         WeekFields weekFields = WeekFields.of(Locale.getDefault());
         int semana = fecha.get(weekFields.weekOfYear());
@@ -199,7 +214,10 @@ public class JornadaService implements IJornadaService {
         }
 
     }
-    private void validarCantTurnosNormalSemanal(Empleado empleado, LocalDate fecha){
+    private void validarCantTurnosNormalSemanal(Empleado empleado, LocalDate fecha, String concepto){
+        if (!concepto.equals("Turno Normal")) {
+            return;
+        }
         List<Jornada> jornadasEmpleado = jornadaRepository.findAllByEmpleado(empleado);
         WeekFields weekFields = WeekFields.of(Locale.getDefault());
         int semana = fecha.get(weekFields.weekOfYear());

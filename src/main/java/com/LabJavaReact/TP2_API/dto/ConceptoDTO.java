@@ -14,10 +14,7 @@ public class ConceptoDTO {
     @NotBlank
     private String nombre;
 
-//    @NotNull
     private Integer hsMinimo;
-
-//    @NotNull
     private Integer hsMaximo;
 
     @NotNull

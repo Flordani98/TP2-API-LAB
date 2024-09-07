@@ -6,7 +6,6 @@ import com.LabJavaReact.TP2_API.exception.ConflictStateResourceException;
 import com.LabJavaReact.TP2_API.exception.ResourceNotFoundException;
 import com.LabJavaReact.TP2_API.mapper.EmpleadoMapper;
 import com.LabJavaReact.TP2_API.model.Empleado;
-import com.LabJavaReact.TP2_API.model.Jornada;
 import com.LabJavaReact.TP2_API.repository.EmpleadoRepository;
 import com.LabJavaReact.TP2_API.repository.JornadaRepository;
 import com.LabJavaReact.TP2_API.service.IEmpleadoService;
