@@ -43,5 +43,12 @@ public class EmpleadoController {
         return ResponseEntity.ok(dtoModificado);
     }
 
+    @DeleteMapping(value="{id}")
+    public ResponseEntity<String> eliminarEmpleado(@NotNull @PathVariable long id){
+        this.empleadoService.eliminarEmpleado(id);
+        return ResponseEntity.noContent().build();
+
+    }
+
 
 }

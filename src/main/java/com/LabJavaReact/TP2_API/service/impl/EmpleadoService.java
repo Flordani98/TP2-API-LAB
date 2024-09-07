@@ -6,7 +6,9 @@ import com.LabJavaReact.TP2_API.exception.ConflictStateResourceException;
 import com.LabJavaReact.TP2_API.exception.ResourceNotFoundException;
 import com.LabJavaReact.TP2_API.mapper.EmpleadoMapper;
 import com.LabJavaReact.TP2_API.model.Empleado;
+import com.LabJavaReact.TP2_API.model.Jornada;
 import com.LabJavaReact.TP2_API.repository.EmpleadoRepository;
+import com.LabJavaReact.TP2_API.repository.JornadaRepository;
 import com.LabJavaReact.TP2_API.service.IEmpleadoService;
 import com.LabJavaReact.TP2_API.validation.ValidadorEmail;
 import com.LabJavaReact.TP2_API.validation.ValidadorNombre;
@@ -24,16 +26,18 @@ import static com.LabJavaReact.TP2_API.mapper.EmpleadoMapper.toEntity;
 @Service
 public class EmpleadoService implements IEmpleadoService {
 
-    private final EmpleadoRepository repository;
+    private final EmpleadoRepository empleadoRepository;
+    private final JornadaRepository jornadaRepository;
 
-    public EmpleadoService(EmpleadoRepository repository){
-        this.repository = repository;
+    public EmpleadoService(EmpleadoRepository empleadoRepository, JornadaRepository jornadaRepository){
+        this.empleadoRepository = empleadoRepository;
+        this.jornadaRepository = jornadaRepository;
     }
 
 
     @Override
     public EmpleadoDTO obtenerEmpleado(long id) {
-        Optional<Empleado> empleado = repository.findById(id);
+        Optional<Empleado> empleado = empleadoRepository.findById(id);
         if(empleado.isPresent()){
             return toDTO(empleado.get());
         } else{
@@ -43,20 +47,20 @@ public class EmpleadoService implements IEmpleadoService {
     }
     @Override
     public List<EmpleadoDTO> obtenerEmpleados() {
-        List<Empleado> empleados = repository.findAll();
+        List<Empleado> empleados = empleadoRepository.findAll();
         return empleados.stream().map(EmpleadoMapper::toDTO).collect(Collectors.toList());
     }
 
     @Override
     public EmpleadoDTO guardarEmpleado(EmpleadoDTO empleadoDTO) {
         validarEmpleado(empleadoDTO);
-        Empleado empleado = repository.save(toEntity(empleadoDTO));
+        Empleado empleado = empleadoRepository.save(toEntity(empleadoDTO));
         return toDTO(empleado);
     }
 
     @Override
     public EmpleadoDTO actualizarEmpleado(long id, EmpleadoDTO dto) {
-        Empleado empleadoExistente = repository.findById(id)
+        Empleado empleadoExistente = empleadoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontró el empleado con Id: " + id));
 
         validarEmpleado(dto);
@@ -68,9 +72,22 @@ public class EmpleadoService implements IEmpleadoService {
         empleadoExistente.setFechaNacimiento(dto.getFechaNacimiento());
         empleadoExistente.setFechaIngreso(dto.getFechaIngreso());
 
-        Empleado empleadoModificado = repository.save(empleadoExistente);
+        Empleado empleadoModificado = empleadoRepository.save(empleadoExistente);
 
         return toDTO(empleadoModificado);
+    }
+
+    @Override
+    public void eliminarEmpleado(long id) {
+        Empleado empleado = empleadoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro al empleado con id: " + id));
+
+        boolean existeJornadaEmpleado = this.jornadaRepository.existsByEmpleado(empleado);
+
+        if(existeJornadaEmpleado){
+            throw new BadCustomerRequestException("No es posible eliminar un empleado con jornadas asociadas");
+        }
+        this.empleadoRepository.deleteById(id);
     }
 
 
@@ -82,7 +99,7 @@ public class EmpleadoService implements IEmpleadoService {
         ValidadorNombre.validarNombre(empleadoDTO.getNombre(), "nombre");
         ValidadorNombre.validarNombre(empleadoDTO.getApellido(), "apellido");
 
-        if(repository.existsByNroDocumento(empleadoDTO.getNroDocumento())){
+        if(empleadoRepository.existsByNroDocumento(empleadoDTO.getNroDocumento())){
             throw new ConflictStateResourceException("Ya existe un empleado con el documento ingresado");
         }
 
@@ -100,7 +117,7 @@ public class EmpleadoService implements IEmpleadoService {
     public void verificarEmailEmpleado(String email){
         ValidadorEmail.validarEmail(email);
 
-        if(repository.existsByEmail(email)){
+        if(empleadoRepository.existsByEmail(email)){
             throw new ConflictStateResourceException("Ya existe un empleado con el email ingresado");
         }
     }

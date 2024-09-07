@@ -3,6 +3,7 @@ package com.LabJavaReact.TP2_API.service.impl;
 import com.LabJavaReact.TP2_API.dto.JornadaCreateDTO;
 import com.LabJavaReact.TP2_API.dto.JornadaViewDTO;
 import com.LabJavaReact.TP2_API.exception.BadCustomerRequestException;
+import com.LabJavaReact.TP2_API.exception.ResourceNotFoundException;
 import com.LabJavaReact.TP2_API.mapper.JornadaCreateDTOMapper;
 import com.LabJavaReact.TP2_API.mapper.JornadaViewDTOMapper;
 import com.LabJavaReact.TP2_API.model.Concepto;
@@ -83,9 +84,9 @@ public class JornadaService implements IJornadaService {
     public JornadaViewDTO guardarJornada(JornadaCreateDTO jornadaCreateDTO) {
 
         Empleado empleado = empleadoRepository.findById(jornadaCreateDTO.getIdEmpleado())
-                .orElseThrow(() -> new BadCustomerRequestException("No existe el empleado ingresado"));
+                .orElseThrow(() -> new ResourceNotFoundException("No existe el empleado ingresado"));
         Concepto concepto = conceptoRepository.findById(jornadaCreateDTO.getIdConcepto())
-                .orElseThrow(() -> new BadCustomerRequestException("No existe el concepto ingresado"));
+                .orElseThrow(() -> new ResourceNotFoundException("No existe el concepto ingresado"));
 
         validarHsTrabajadasSegunConcepto(concepto.getNombre(), jornadaCreateDTO.getHsTrabajadas());
 
