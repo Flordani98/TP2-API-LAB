@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -21,9 +22,13 @@ public class JornadaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<JornadaViewDTO>> obtenerJornadas(){
-        List<JornadaViewDTO> listaJornadas = jornadaService.obtenerJornadas();
+    public ResponseEntity<List<JornadaViewDTO>> obtenerJornadas(@RequestParam(required = false) Long nroDocumento,
+                                                                @RequestParam(required = false) LocalDate fechaDesde,
+                                                                @RequestParam(required = false) LocalDate fechaHasta){
+
+        List<JornadaViewDTO> listaJornadas = jornadaService.obtenerJornadasFiltradas(nroDocumento, fechaDesde, fechaHasta);
         return ResponseEntity.ok(listaJornadas);
+
     }
 
     @PostMapping

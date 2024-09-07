@@ -19,6 +19,7 @@ import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,15 +39,33 @@ public class JornadaService implements IJornadaService {
     @Override
     public List<JornadaViewDTO> obtenerJornadas() {
         List<Jornada> jornadas = jornadaRepository.findAll();
-        List<JornadaViewDTO> jornadaViewDTOS = new ArrayList<>();
-
-        for (Jornada jornada: jornadas) {
-            jornadaViewDTOS.add(JornadaViewDTOMapper.toDTO(jornada));
-
-        }
-        return jornadaViewDTOS;
+        return convertirListaJornadaAJornadaViewDTO(jornadas);
     }
 
+    @Override
+    public List<JornadaViewDTO> obtenerJornadasFiltradas(Long nroDocumento, LocalDate fechaDesde, LocalDate fechaHasta) {
+        List<Jornada> jornadas = jornadaRepository.findAll();
+        boolean existeNroDoc = existeNroDocumentoListaJornadas(nroDocumento);
+
+        if(fechaDesde != null && fechaHasta != null && nroDocumento != null && existeNroDoc){
+            jornadas = filtrarListaJornadasSegunNroDocumentoYFecha(jornadas, nroDocumento, fechaDesde, fechaHasta);
+        }else if(fechaDesde != null && fechaHasta != null){
+            jornadas =  filtrarJornadasSegunFechaDesdeHasta(jornadas, fechaDesde, fechaHasta);
+        }else if(nroDocumento != null){
+            jornadas = filtrarListaJornadasSegunNroDocumento(jornadas, nroDocumento);
+        }else if(fechaDesde != null | fechaHasta != null){
+            if(fechaDesde != null){
+                jornadas = filtrarJornadasSegunFechaDesde(jornadas, fechaDesde);
+            }else{
+                jornadas = filtrarJornadasSegunFechaHasta(jornadas, fechaHasta);
+            }
+        }
+        //cuando fecha desde o hasta es != null && nroDocumento es != null se retorna
+        //la lista de jornadas correspondientes a ese nroDocumento, ya que no se especifico en los
+        //criterios de aceptación que pasaría si fecha(desde o hasta) y nroDocumento es definido.
+
+        return convertirListaJornadaAJornadaViewDTO(jornadas);
+    }
     @Override
     public JornadaViewDTO guardarJornada(JornadaCreateDTO jornadaCreateDTO) {
 
@@ -239,6 +258,84 @@ public class JornadaService implements IJornadaService {
 
         return jornadasMismoAnio.stream().filter(jornada -> jornada.getFecha().getMonthValue() == mes).collect(Collectors.toList());
 
+    }
+
+    public List<Jornada> filtrarListaJornadasSegunNroDocumentoYFecha(List<Jornada> jornadas, Long nroDocumento,
+                                                                     LocalDate fechaDesde, LocalDate fechaHasta) {
+        List<Jornada> jornadasFiltradas = filtrarListaJornadasSegunNroDocumento(jornadas, nroDocumento);
+        jornadasFiltradas = filtrarJornadasSegunFechaDesdeHasta(jornadasFiltradas, fechaDesde, fechaHasta);
+
+        return jornadasFiltradas;
+    }
+    public List<Jornada> filtrarListaJornadasSegunNroDocumento(List<Jornada> jornadas, Long nroDocumento){
+        List<Jornada> jornadasFiltradasPorNroDocumento = new ArrayList<>();
+
+        for (Jornada jornada: jornadas) {
+            if(jornada.getEmpleado().getNroDocumento().equals(nroDocumento)){
+                jornadasFiltradasPorNroDocumento.add(jornada);
+
+            }
+        }
+        return jornadasFiltradasPorNroDocumento;
+    }
+
+    public List<Jornada> filtrarJornadasSegunFechaDesdeHasta(List<Jornada> jornadas, LocalDate fechaDesde, LocalDate fechaHasta){
+        List<Jornada> jornadasFiltradasPorFecha = new ArrayList<>();
+
+        for (Jornada jornada: jornadas) {
+            if(jornada.getFecha().isAfter(fechaDesde) && jornada.getFecha().isBefore(fechaHasta) ){
+                jornadasFiltradasPorFecha.add(jornada);
+
+            }
+
+        }
+        return jornadasFiltradasPorFecha;
+    }
+
+    public List<Jornada> filtrarJornadasSegunFechaDesde(List<Jornada> jornadas, LocalDate fechaDesde){
+        List<Jornada> jornadasFiltradasPorFecha = new ArrayList<>();
+
+        for (Jornada jornada: jornadas) {
+            if(jornada.getFecha().isAfter(fechaDesde)){
+                jornadasFiltradasPorFecha.add(jornada);
+
+            }
+
+        }
+        return jornadasFiltradasPorFecha;
+    }
+    public List<Jornada> filtrarJornadasSegunFechaHasta(List<Jornada> jornadas, LocalDate fechaHasta){
+        List<Jornada> jornadasFiltradasPorFecha = new ArrayList<>();
+
+        for (Jornada jornada: jornadas) {
+            if(jornada.getFecha().isBefore(fechaHasta) ){
+                jornadasFiltradasPorFecha.add(jornada);
+            }
+
+        }
+        return jornadasFiltradasPorFecha;
+    }
+    public List<JornadaViewDTO> convertirListaJornadaAJornadaViewDTO(List<Jornada> jornadas){
+        List<JornadaViewDTO> jornadaViewDTOS = new ArrayList<>();
+
+        for (Jornada jornada: jornadas) {
+            jornadaViewDTOS.add(JornadaViewDTOMapper.toDTO(jornada));
+
+        }
+        return jornadaViewDTOS;
+    }
+    public boolean existeNroDocumentoListaJornadas(Long nroDocumento){
+        List<Jornada> jornadas = jornadaRepository.findAll();
+        boolean resp = false;
+        for (Jornada jornada: jornadas) {
+            if(nroDocumento != null){
+                if (jornada.getEmpleado().getNroDocumento().equals(nroDocumento)) {
+                    resp = true;
+                    break;
+                }
+            }
+        }
+        return resp;
     }
 
     private int contarCantTurnoEspecifico(List<Jornada> jornadas, String nombreTurno){
